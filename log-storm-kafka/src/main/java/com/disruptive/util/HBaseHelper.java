@@ -44,6 +44,22 @@ public class HBaseHelper {
 	private static Configuration conf = null;
 	private static HConnection conn = null;
 
+	private static void loadConf(){
+		conf = HBaseConfiguration.create();
+		conf.set("hbase.zookeeper.quorum",
+				PropertiesUtil.getPropertyString("hbase.zookeeper.quorum"));
+		conf.set("hbase.zookeeper.property.clientPort", PropertiesUtil
+				.getPropertyString("hbase.zookeeper.property.clientPort"));
+		conf.set("hbase.zookeeper.master",
+				PropertiesUtil.getPropertyString("hbase.zookeeper.master"));
+		conf.set("zookeeper.znode.parent",
+				PropertiesUtil.getPropertyString("zookeeper.znode.parent"));
+		try {
+			conn = HConnectionManager.createConnection(conf);
+		} catch (IOException e) {
+			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+		}
+	}
 	/**
 	 * 初始化配置
 	 */
@@ -62,7 +78,6 @@ public class HBaseHelper {
 		} catch (IOException e) {
 			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
 		}
-
 	}
 	/**
 	 * 创建 HBase nameSpace
@@ -80,22 +95,7 @@ public class HBaseHelper {
 		}
 	}
 	
-	private static void loadConf(){
-		conf = HBaseConfiguration.create();
-		conf.set("hbase.zookeeper.quorum",
-				PropertiesUtil.getPropertyString("hbase.zookeeper.quorum"));
-		conf.set("hbase.zookeeper.property.clientPort", PropertiesUtil
-				.getPropertyString("hbase.zookeeper.property.clientPort"));
-		conf.set("hbase.zookeeper.master",
-				PropertiesUtil.getPropertyString("hbase.zookeeper.master"));
-		conf.set("zookeeper.znode.parent",
-				PropertiesUtil.getPropertyString("zookeeper.znode.parent"));
-		try {
-			conn = HConnectionManager.createConnection(conf);
-		} catch (IOException e) {
-			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
-		}
-	}
+	
 
 	/**
 	 * 根据table name 返回HBase HTableInterface对象，可以执行CRUD操作
@@ -177,21 +177,23 @@ public class HBaseHelper {
 	 */
 	public static Map<String, String> queryRow(String tableName, String rowKey) {
 		HTableInterface table = null;
-		Map<String, String> result = null;
+		Map<String, String> result = new HashMap<String,String>();
 		// System.out.println("queryRow :" + rowKey);
-		byte[] b = toBytes(rowKey);
-		for (int i = 0; i < b.length; i++)
-			// System.out.println(b[i]);
-			try {
-				table = getTable(tableName);
-				Get get = new Get(toBytes(rowKey));
-				Result rs = table.get(get);
-				result = resultHandle(rs);
-			} catch (IOException e) {
-				LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
-			} finally {
-				closeTable(table);
-			}
+		if(StringUtils.isNotBlank(tableName)&&StringUtils.isNotBlank(rowKey)){
+			byte[] b = toBytes(rowKey);
+			for (int i = 0; i < b.length; i++)
+				// System.out.println(b[i]);
+				try {
+					table = getTable(tableName);
+					Get get = new Get(toBytes(rowKey));
+					Result rs = table.get(get);
+					result = resultHandle(rs);
+				} catch (IOException e) {
+					LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+				} finally {
+					closeTable(table);
+				}
+		}
 		return result;
 	}
 
@@ -657,23 +659,37 @@ public class HBaseHelper {
 		List<Map<String, String>> result = new LinkedList<Map<String, String>>();
 		try{
 			table = getTable(tableName);
-			List<byte[]> rowKeyList = new LinkedList<byte[]>();
-			
 			Scan s = new Scan();
 			s.setFilter(new PrefixFilter(rowPrifix.getBytes()));
 			ResultScanner rs = table.getScanner(s);
 			for (Result r : rs) {
 				byte[] rowKey = null;
 				rowKey = r.getRow();
-				rowKeyList.add(rowKey);
+				if(rowKey!=null){
+					Result res=table.get(new Get(rowKey));
+					if(res!=null){
+					Map<String, String> rsMap = null;
+					rsMap=resultHandle(res);
+					result.add(rsMap);
+					}
+				}
 			}
-			List<Get> getList = getGetList(rowKeyList);
-			Result[] rss = table.get(getList);
-			Map<String, String> rsMap = null;
-			for (Result r : rss) {
-				rsMap = resultHandle(r);
-				result.add(rsMap);
-			}
+			
+//			Scan s = new Scan();
+//			s.setFilter(new PrefixFilter(rowPrifix.getBytes()));
+//			ResultScanner rs = table.getScanner(s);
+//			for (Result r : rs) {
+//				byte[] rowKey = null;
+//				rowKey = r.getRow();
+//				rowKeyList.add(rowKey);
+//			}
+//			List<Get> getList = getGetList(rowKeyList);
+//			Result[] rss = table.get(getList);
+//			Map<String, String> rsMap = null;
+//			for (Result r : rss) {
+//				rsMap = resultHandle(r);
+//				result.add(rsMap);
+//			}
 		}catch(Exception e){
 			LOGGER.error(e.getCause().getClass() + "|"
 					+ e.getCause().getMessage() + "|" + e.getMessage());

@@ -66,7 +66,6 @@ public class LogKafkaTopology {
 				OutputCollector collector) {
 			this.collector = collector;
 		}
-
 		public void execute(Tuple input) {
 			String line = input.getString(0);
 			//处理前面|
@@ -172,7 +171,6 @@ public class LogKafkaTopology {
 			printDes();
 			return ;
 		}
-		
 		String zks01=args[1].trim();
 		String zks02=args[2].trim();
 		String zks03=args[3].trim();
