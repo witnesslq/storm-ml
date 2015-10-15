@@ -61,7 +61,6 @@ public class LogKafkaTopology {
 		private static final String OTHRE="OTHRER"; 
 		
 		
-		
 		private OutputCollector collector;
 		public void prepare(Map stormConf, TopologyContext context,
 				OutputCollector collector) {
@@ -89,9 +88,8 @@ public class LogKafkaTopology {
 						&& words[8].trim().toLowerCase()
 								.equals("interfacecall")
 						&& (!words[7].trim().toLowerCase().equals("ebbc"))) {
-					LOG.info("line:{}"+line);
+					//LOG.info("line:{}"+line);
 					collector.emit(input, new Values(str));
-					
 				} else {
 					// 记录有问题的日志
 				}

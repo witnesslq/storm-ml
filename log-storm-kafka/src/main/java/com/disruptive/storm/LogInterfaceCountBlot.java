@@ -58,7 +58,6 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 	//	LOGGER.info("===="+line);
 		String[] words = line.split("\\|",-1);
 		if(words.length<12){
-			
 			collector.emit(input, new Values(line,words));
 			collector.ack(input);
 			return;
@@ -69,11 +68,12 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 				requestHeadler(line,words);
 			//	collector.ack(input);
 			} catch (IOException e) {
-				LOGGER.error("ERROR|{}",e.getMessage());
+				LOGGER.error(e.getCause().getClass() + "|"
+						+ e.getCause().getMessage() + "|" + e.getMessage());
 			}
 		}else{
 			responseHeadler(line,words);
-		//	collector.ack(input);
+		//collector.ack(input);
 		}
 		collector.emit(input, new Values(line,words));
 		collector.ack(input);
@@ -100,7 +100,8 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 		try {
 			endTime = time2Long(words[1]);
 		} catch (ParseException e2) {
-			LOGGER.error("ERROR|{}",e2.getMessage());
+			LOGGER.error(e2.getCause().getClass() + "|"
+					+ e2.getCause().getMessage() + "|" + e2.getMessage());
 		}
 		String rowKey1=words[1]+"|response|"+key;//+"|"+tmpMap.get("reqseqno");
 		Map<String,String> teMap=queryHbase(rowKey1);
@@ -138,18 +139,18 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 			try {
 				startTime = time2Long(value);
 			} catch (ParseException e1) {
-				e1.printStackTrace();
+				LOGGER.error(e1.getCause().getClass() + "|"
+					+ e1.getCause().getMessage() + "|" + e1.getMessage());
 			}
 			//timeMap.remove(key);
 			long count = endTime - startTime;
 			interfaceTimeOut.setTimeOut((int) count);
-			//
 			InterfaceTimeOutDao dao = new InterfaceTimeOutDaoImpl();
 			try {
-			//	System.out.println("save=========");
 				dao.save(interfaceTimeOut,timeStr2Date(value));
 			} catch (Exception e) {
-				LOGGER.error("ERROR|{}",e.getMessage());
+				LOGGER.error(e.getCause().getClass() + "|"
+						+ e.getCause().getMessage() + "|" + e.getMessage());
 			}
 			// 如果不全为0则提示异常错误信息
 			if (!RESPONSE_SUCCESS_CODE.equals(interfaceTimeOut.getRespCode().trim())) {
@@ -165,7 +166,6 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 		Map<String, String> map = new HashMap<String, String>();
 		// 是请求日志
 		String json = words[11];
-		
 		if (json.startsWith("\\{message_head:")) {
 			String[] array = json.replaceAll("\\{message_head:", "")
 					.replaceAll("\\{", "").replaceAll("\\}", "").split(",");
@@ -209,13 +209,10 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 				if(m!=null&&m.size()>0){
 					//处理关联 删除关联上的Response
 					HBaseHelper.deleteRow("sys_business_no_request_log", map.get("rowKey").toString());
-					System.out.println(m.get("line").toString());
 					responseHeadler(reqRowKey,m.get("line").toString().split("\\|",-1));
 				}
 			}
 		}
-		
-		
 	}
 	
 	/**
