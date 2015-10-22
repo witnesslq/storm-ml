@@ -148,9 +148,17 @@ public class LogKafkaTopology {
 			declarer.declare(new Fields("word", "count"));
 		}
 	}
+	
 
 	public static void main(String[] args) throws AlreadyAliveException,
 			InvalidTopologyException, InterruptedException {
+		
+		if(args.length!=5){
+			printDes();
+			
+			
+			return ;
+		}
 		
 		String zks01=args[1].trim();
 		String zks02=args[2].trim();
@@ -163,7 +171,7 @@ public class LogKafkaTopology {
 		String topic = "wgptopic2";//test//wgptopic2
 		*/	
 		
-		String zkRoot = topic; // default zookeeper root configuration for  storm
+		String zkRoot = "/storm"; // default zookeeper root configuration for  storm
 		String id = "word";
 		String zks = zks01+":2181,"+zks02+":2181,"+zks03+":2181";
         //"lognn2te","lognn1te", "logrmte"
@@ -212,7 +220,24 @@ public class LogKafkaTopology {
 			// Thread.sleep(60000);
 			// cluster.shutdown();
 		}
-
+	}
+	
+	public static void printDes(){
+		System.out.println();
+		System.out.println();
+		System.out.println("===========================");
+		System.out.println();
+		System.out.println("===params:");
+		System.out.println("{numWorker} {zks01} {zks02} {zks03} {topic} ");
+		System.out.println("numWorker:StringConfig->NumWorkers");
+		System.out.println("zks01:ZooKeeper-> zk01");
+		System.out.println("zks02:ZooKeeper-> zk02");
+		System.out.println("zks03:ZooKeeper-> zk03");
+		System.out.println("topic:SpoutConfig->topic");
+		System.out.println();
+		System.out.println("===========================");
+		System.out.println();
+		
 	}
 
 }

@@ -11,7 +11,7 @@ public class PropertiesUtil {
     public static Properties getInstance() throws IOException {
         if (properties == null) {
             properties = new Properties();
-            InputStream resourceAsStream = PropertiesUtil.class.getClassLoader().getResourceAsStream("config.properties");
+            InputStream resourceAsStream = PropertiesUtil.class.getClassLoader().getResourceAsStream("config_test.properties");
             properties.load(resourceAsStream);
         }
         return properties;
