@@ -6,7 +6,6 @@ import java.util.Date;
 import com.disruptive.dao.InterfaceTimeOutDao;
 import com.disruptive.model.InterfaceTimeOut;
 import com.disruptive.util.MySQLHelper;
-import com.disruptive.util.XmlHelper;
 import com.disruptive.util.cache.CacheHelper;
 
 public class InterfaceTimeOutDaoImpl implements InterfaceTimeOutDao {

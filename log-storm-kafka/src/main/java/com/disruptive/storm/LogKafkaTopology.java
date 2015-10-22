@@ -163,7 +163,7 @@ public class LogKafkaTopology {
 		String topic = "wgptopic2";//test//wgptopic2
 		*/	
 		
-		String zkRoot = "/storm"; // default zookeeper root configuration for  storm
+		String zkRoot = topic; // default zookeeper root configuration for  storm
 		String id = "word";
 		String zks = zks01+":2181,"+zks02+":2181,"+zks03+":2181";
         //"lognn2te","lognn1te", "logrmte"
