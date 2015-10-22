@@ -75,7 +75,6 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 		}else{
 			responseHeadler(line,words);
 		//	collector.ack(input);
-			
 		}
 		collector.emit(input, new Values(line,words));
 		collector.ack(input);
