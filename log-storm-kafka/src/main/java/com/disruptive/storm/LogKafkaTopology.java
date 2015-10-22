@@ -155,8 +155,6 @@ public class LogKafkaTopology {
 		
 		if(args.length!=5){
 			printDes();
-			
-			
 			return ;
 		}
 		
@@ -164,13 +162,6 @@ public class LogKafkaTopology {
 		String zks02=args[2].trim();
 		String zks03=args[3].trim();
 		String topic = args[4];//test//wgptopic2
-
-		/*String zks01="lognn2te";
-		String zks02="lognn1te";
-		String zks03="logrmte";
-		String topic = "wgptopic2";//test//wgptopic2
-		*/	
-		
 		String zkRoot = "/storm"; // default zookeeper root configuration for  storm
 		String id = "word";
 		String zks = zks01+":2181,"+zks02+":2181,"+zks03+":2181";
@@ -182,7 +173,6 @@ public class LogKafkaTopology {
 		spoutConf.zkServers = Arrays.asList(new String[] { zks01,
 				zks02, zks03 });
 		spoutConf.zkPort = 2181;
-
 		/**
 		 * 处理流程
 		 */
