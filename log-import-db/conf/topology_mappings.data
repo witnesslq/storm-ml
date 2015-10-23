@@ -1,0 +1,11 @@
+[network_topology]
+logdn2te=/default-rack
+10.16.0.215=/default-rack
+logdn3te=/default-rack
+10.16.0.216=/default-rack
+logdn1te=/default-rack
+10.16.0.214=/default-rack
+logdn4te=/default-rack
+10.16.41.200=/default-rack
+logdn5te=/default-rack
+10.16.0.110=/default-rack
