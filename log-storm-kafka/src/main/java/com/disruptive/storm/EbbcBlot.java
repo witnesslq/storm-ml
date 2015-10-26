@@ -69,17 +69,18 @@ public class EbbcBlot extends BaseRichBolt {
 		}
 		//解析逻辑
 		//
-		String time_str=words[0].trim();
-		String domain_name=words[1].trim();
-		String function=words[2].trim();
-		String pid=words[3].trim();
-		String pname=words[4].trim();
-		String class_name=words[5].trim();
-		String app_name=words[6].trim();
-		String interfaceCall=words[7].trim();
-		String reqres=words[8].trim();
-		String service_name=words[9].trim();
-		String other=line.substring(line.indexOf("|", 10));
+		String log_level=words[0].trim();
+		String time_str=words[1].trim();
+		String domain_name=words[2].trim();
+		String function=words[3].trim();
+		String pid=words[4].trim();
+		String pname=words[5].trim();
+		String class_name=words[6].trim();
+		String app_name=words[7].trim();
+		String interfaceCall=words[8].trim();
+		String reqres=words[9].trim();
+		String service_name=words[10].trim();
+		String other=line.substring(line.indexOf("|", 11));
 	    collector.emit(input,new Values(
 	    		time_str,
 	    		domain_name,

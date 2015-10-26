@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +46,22 @@ public class LogKafkaTopology {
 		private static final Logger LOG =LoggerFactory
 				.getLogger(KafkaWordSplitter.class);
 		private static final long serialVersionUID = 886149197481637894L;
+		
+		private static final String LOG_LEVEL="log_level";
+		private static final String TIME_STR="time_str";
+		private static final String DOMAIN_NAME="domain_name";
+		private static final String FUNCTION="function";
+		private static final String PID="pid";
+		private static final String PNAME="pname";
+		private static final String CLASSNAME="class_name";
+		private static final String APPNAME="app_name";
+		private static final String INTERFACECALL="interface_call";
+		private static final String REQRES="req_res";
+		private static final String SERVICENAME="service_name";
+		private static final String OTHRE="OTHRER"; 
+		
+		
+		
 		private OutputCollector collector;
 		public void prepare(Map stormConf, TopologyContext context,
 				OutputCollector collector) {
@@ -61,13 +76,15 @@ public class LogKafkaTopology {
 			}
 			String[] arraylines = line.split("\\n");
 			for (String str : arraylines) {
-				String[] words = str.split("\\|", -1);
-				if (str.contains("ERROR")) {
+				//是否error
+				if (str.contains("ERROR") || str.contains("error")) {
 					String key = System.currentTimeMillis()+"";//words[0].trim().trim() + "|"
 							//  + "|"+ words[2].trim().toLowerCase() + "|"
 					saveErrorLog(key, str);
-					//collector.ack(input);
 				}
+				//根据|拆分 
+				String[] words = str.split("\\|", -1);
+				
 				if (words.length > 9
 						&& words[8].trim().toLowerCase()
 								.equals("interfacecall")
