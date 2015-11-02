@@ -134,7 +134,7 @@ public class HBaseHelper {
 			// 关闭htable
 			closeTable(table);
 		}
-		LOGGER.info("end save......");
+		//LOGGER.info("end save......");
 	}
 
 	/**
@@ -147,6 +147,9 @@ public class HBaseHelper {
 	public static String saveSingle(Put put, String tableName) {
 		// 获取表名
 		HTableInterface table = null;
+		if(put==null){
+			return "";
+		}
 		try {
 			table = getTable(tableName);
 			table.put(put);

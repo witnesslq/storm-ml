@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.Put;
@@ -243,7 +242,6 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 			}
 		}
 	}
-
 	/**
 	 * 保存response 计数
 	 * 
