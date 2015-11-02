@@ -24,7 +24,6 @@ public class HDFSUtil {
 		conf.addResource(new Path(path + "core-site.xml"));
 		conf.addResource(new Path(path + "hdfs-site.xml"));
 		conf.addResource(new Path(path + "mapred-site.xml"));
-
 		try {
 			hdfs = FileSystem.get(conf);
 		} catch (IOException e) {
