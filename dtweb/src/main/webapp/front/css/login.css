@@ -1,0 +1,29 @@
+@charset "utf-8";
+/* CSS Document */
+body{font:14px/22px "宋体";color:#494949;background:#649cbf;}
+*{margin:0;padding:0;}
+a{text-decoration:none;display:inline-block;}
+span{display:inline-block;}
+
+.login_div_box{width:457px;height:414px;overflow:Hidden;position:absolute;top:50%;left:50%;margin-left:-226px;margin-top:-207px;}
+.login_div_top,.login_div_bot{width:457px;height:18px;overflow:Hidden;line-height:0;}
+.login_div_mid{width:450px;height:300px;overflow:Hidden;background:url(../images/login_box_midbg.png) 0 0 repeat-y;padding:0 10px;}
+.login_div_mid .titDiv{width:437px;height:57px;line-height:57px;font-size:18px;color:#424242;font-family:"微软雅黑";background:url(../images/titlebg.gif) 0 0 repeat-x;margin:0 0 22px;}
+.titDiv .t1{width:126px;padding:7px 0 0 22px;height:39px;/*border-right:solid 1px #fafaf7;float:left;*/}
+.titDiv .t2{height:28px;padding:11px 0 7px 20px;line-height:28px;border-left:solid 1px #ced3d7;float:left;}
+.rows{width:437px;height:50px;overflow:Hidden;}
+.base_tit{width:92px;height:37px;line-height:37px;text-align:right;padding:0 10px 0 0;float:left;}
+.input_text{width:223px;height:35px;line-height:35px;padding:0 10px;background:url(../images/inputbg.gif) 0 0 repeat-x;float:left;border:solid 1px #d5d5d3;}
+.input_text:focus{border:solid 1px #44a2e0;}
+.bgshort{width:93px;}
+.check_box{width:107px;height:43px;float:left;padding:0 0 0 14px;}
+.div_tishi{height:22px;line-height:22px;padding-left:102px;float:left;font-size:12px;clear:both;width:300px;}
+.div_tishi span.error{color:#f00;}
+p.btns{padding:6px 0 0 102px;height:41px;overflow:Hidden;}
+.btn_submit{width:167px;height:40px;line-height:40px;text-align:center;color:#fff;font-family:"微软雅黑";font-weight:normal;font-size:18px;background:url(../images/btn_login.gif) 0 0 no-repeat;border:none;cursor:pointer;margin-right:40px;}
+p.btns a{height:20px;line-height:20px;color:#649cbf;}
+p.btns a:hover{text-decoration:underline;}
+.down_link{float:left; margin:8px 0 0 -10px;
+}
+.choose_way{float:left;  border:1px solid #d5d5d3; width:92px; height:35px;
+}
