@@ -1,6 +1,8 @@
 package com.disruptive.util;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,7 +59,7 @@ public class HBaseHelper {
 		try {
 			conn = HConnectionManager.createConnection(conf);
 		} catch (IOException e) {
-			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+			LOGGER.error(getTrace(e));
 		}
 	}
 	/**
@@ -76,7 +78,7 @@ public class HBaseHelper {
 		try {
 			conn = HConnectionManager.createConnection(conf);
 		} catch (IOException e) {
-			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+			LOGGER.error(getTrace(e));
 		}
 	}
 	/**
@@ -91,7 +93,7 @@ public class HBaseHelper {
 			admin.createNamespace(NamespaceDescriptor.create(namespace).build());
 			admin.close();
 		} catch (Exception e) {
-			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+			LOGGER.error(getTrace(e));
 		}
 	}
 	
@@ -112,7 +114,7 @@ public class HBaseHelper {
 			}
 			table = conn.getTable(tableName);
 		} catch (IOException e) {
-			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+			LOGGER.error(getTrace(e));
 		}
 		return table;
 	}
@@ -128,7 +130,7 @@ public class HBaseHelper {
 			// System.out.println(batch.length);
 			table.put(puts);
 		} catch (Exception e) {
-			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+			LOGGER.error(getTrace(e));
 			// e.printStackTrace();
 		} finally {
 			// 关闭htable
@@ -154,7 +156,9 @@ public class HBaseHelper {
 			table = getTable(tableName);
 			table.put(put);
 		} catch (IOException e) {
-			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+			
+			
+			LOGGER.error(getTrace(e));
 			return Bytes.toString(put.getRow());
 		} finally {
 			// 关闭htable
@@ -183,8 +187,6 @@ public class HBaseHelper {
 		Map<String, String> result = new HashMap<String,String>();
 		// System.out.println("queryRow :" + rowKey);
 		if(StringUtils.isNotBlank(tableName)&&StringUtils.isNotBlank(rowKey)){
-			byte[] b = toBytes(rowKey);
-			for (int i = 0; i < b.length; i++)
 				// System.out.println(b[i]);
 				try {
 					table = getTable(tableName);
@@ -192,7 +194,7 @@ public class HBaseHelper {
 					Result rs = table.get(get);
 					result = resultHandle(rs);
 				} catch (IOException e) {
-					LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+					LOGGER.error(getTrace(e));
 				} finally {
 					closeTable(table);
 				}
@@ -208,20 +210,23 @@ public class HBaseHelper {
 	 */
 	private static Map<String, String> resultHandle(Result rs) {
 		Map<String, String> result = new HashMap<String, String>();
+		if(rs==null){
+			return result; 
+		}
 		Cell[] cells = rs.rawCells();
-		result = new HashMap<String, String>();
 		boolean isFirst = true;
-		for (Cell cell : cells) {
-			if (isFirst) {
-				result.put("rowKey", toString(CellUtil.cloneRow(cell)));
-				result.put("timeStamp", cell.getTimestamp() + "");
-				isFirst = false;
+		if(cells!=null && cells.length>0){
+			for (Cell cell : cells) {
+				if (isFirst) {
+					result.put("rowKey", toString(CellUtil.cloneRow(cell)));
+					result.put("timeStamp", cell.getTimestamp() + "");
+					isFirst = false;
+				}
+				// System.out.println(new
+				// Date(cell.getTimestamp()).toLocaleString());;
+				result.put(toString(CellUtil.cloneQualifier(cell)),
+				toString(CellUtil.cloneValue(cell)));
 			}
-			// System.out.println(new
-			// Date(cell.getTimestamp()).toLocaleString());;
-			result.put(toString(CellUtil.cloneQualifier(cell)),
-
-			toString(CellUtil.cloneValue(cell)));
 		}
 		return result;
 	}
@@ -246,7 +251,7 @@ public class HBaseHelper {
 				rsList.add(map);
 			}
 		} catch (IOException e) {
-			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+			LOGGER.error(getTrace(e));
 		} finally {
 			closeTable(table);
 		}
@@ -305,7 +310,7 @@ public class HBaseHelper {
 
 			}
 		} catch (IOException e) {
-			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+			LOGGER.error(getTrace(e));
 		} finally {
 			closeTable(table);
 		}
@@ -328,7 +333,7 @@ public class HBaseHelper {
 		} catch (Exception e) {
 			// System.out.println("关闭" + table.getName() + "失败!!!!!!");
 			// e.printStackTrace();
-			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+			LOGGER.error(getTrace(e));
 		}
 	}
 
@@ -345,7 +350,7 @@ public class HBaseHelper {
 		try {
 			admin.close();
 		} catch (Exception e) {
-			LOGGER.error(e.getCause().getClass() + "|" + e.getCause().getMessage()+"|"+e.getMessage());
+			LOGGER.error(getTrace(e));
 		}
 	}
 
@@ -380,8 +385,7 @@ public class HBaseHelper {
 
 			admin.createTable(desc);
 		} catch (Exception e) {
-			LOGGER.error(e.getCause().getClass() + ","
-					+ e.getCause().getMessage());
+			LOGGER.error(getTrace(e));
 		} finally {
 			closeAdmin(admin);
 		}
@@ -421,8 +425,7 @@ public class HBaseHelper {
 				return false;
 			}
 		} catch (IOException e) {
-			LOGGER.error(e.getCause().getClass() + "|"
-					+ e.getCause().getMessage() + "|" + e.getMessage());
+			LOGGER.error(getTrace(e));
 		} finally {
 			closeAdmin(admin);
 		}
@@ -450,8 +453,7 @@ public class HBaseHelper {
 
 			}
 		} catch (Exception e) {
-			LOGGER.error(e.getCause().getClass() + "|"
-					+ e.getCause().getMessage() + "|" + e.getMessage());
+			LOGGER.error(getTrace(e));
 		} finally {
 			closeTable(table);
 		}
@@ -473,8 +475,7 @@ public class HBaseHelper {
 		try {
 			bytes = str.getBytes("UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			LOGGER.error(e.getCause().getClass() + "|"
-					+ e.getCause().getMessage() + "|" + e.getMessage());
+			LOGGER.error(getTrace(e));
 		}
 		return bytes;
 	}
@@ -494,8 +495,7 @@ public class HBaseHelper {
 		try {
 			returnVal = new String(arr, charset);
 		} catch (UnsupportedEncodingException e) {
-			LOGGER.error(e.getCause().getClass() + "|"
-					+ e.getCause().getMessage() + "|" + e.getMessage());
+			LOGGER.error(getTrace(e));
 		}
 		return returnVal;
 	}
@@ -535,8 +535,7 @@ public class HBaseHelper {
 			table.delete(deletes);
 			// System.out.println("清除表：" + tableName + "成功！！");
 		} catch (Exception e) {
-			LOGGER.error(e.getCause().getClass() + "|"
-					+ e.getCause().getMessage() + "|" + e.getMessage());
+			LOGGER.error(getTrace(e));
 		} finally {
 			closeTable(table);
 		}
@@ -647,8 +646,7 @@ public class HBaseHelper {
 				result.add(rsMap);
 			}
 		} catch (Exception e) {
-			LOGGER.error(e.getCause().getClass() + "|"
-					+ e.getCause().getMessage() + "|" + e.getMessage());
+			LOGGER.error(getTrace(e));
 		} finally {
 			closeTable(table);
 		}
@@ -694,8 +692,7 @@ public class HBaseHelper {
 //				result.add(rsMap);
 //			}
 		}catch(Exception e){
-			LOGGER.error(e.getCause().getClass() + "|"
-					+ e.getCause().getMessage() + "|" + e.getMessage());
+			LOGGER.error(getTrace(e));
 		}finally{
 			closeTable(table);
 		}
@@ -715,8 +712,7 @@ public class HBaseHelper {
 				count++;
 			}
 		} catch (Exception e) {
-			LOGGER.error(e.getCause().getClass() + "|"
-					+ e.getCause().getMessage() + "|" + e.getMessage());
+			LOGGER.error(getTrace(e));;
 		}finally{
 			closeTable(table);
 		}
@@ -766,8 +762,7 @@ public class HBaseHelper {
 			admin.disableTable(name);
 			admin.deleteTable(name);
 		} catch (Exception e) {
-			LOGGER.error(e.getCause().getClass() + "|"
-					+ e.getCause().getMessage() + "|" + e.getMessage());
+			LOGGER.error(getTrace(e));
 		} finally {
 			closeAdmin(admin);
 		}
@@ -805,5 +800,13 @@ public class HBaseHelper {
 		results.put("failedCount", failedCount);
 		return results;
 	}
+	
+	public static String getTrace(Throwable t) {
+        StringWriter stringWriter= new StringWriter();
+        PrintWriter writer= new PrintWriter(stringWriter);
+        t.printStackTrace(writer);
+        StringBuffer buffer= stringWriter.getBuffer();
+        return buffer.toString();
+    }
 
 }

@@ -214,6 +214,9 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 				+ map.get("reqSeqNo".toLowerCase());
 		reqCount(words[1], words[2].trim().toLowerCase() + "|"
 				+ words[9].trim().toLowerCase());
+		reqCountByDay(words[1], words[2].trim().toLowerCase() + "|"
+				+ words[9].trim().toLowerCase());
+		
 		map.put("runtime", words[1]);
 		String rowKey = words[1] + "|request|" + key;// +"|"+map.get("reqSeqNo".toLowerCase());
 		saveHbase(rowKey, line);
@@ -305,10 +308,34 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 				Bytes.toBytes(allCount + ""));
 		HBaseHelper.save(put, "request_count");
 	}
+	
+	/**
+	 * 保存request 计数 按分钟记录
+	 * 
+	 * @param rowKey
+	 */
+	private void reqCountByDay(String timeStr, String rowKey) {
+		Integer allCount = 0;
+		String key = time2yyyyMMdd(timeStr) + "|" + rowKey;
+		Map<String, String> map = HBaseHelper.queryRow("request_count", key);
+		if (map != null && map.size() > 0) {
+			allCount = Integer.parseInt(map.get("allCount").toString().trim());
+		}
+		allCount++;
+		Put put = new Put(key.getBytes());
+		put.add("t1".getBytes(), "allCount".getBytes(),
+				Bytes.toBytes(allCount + ""));
+		HBaseHelper.save(put, "request_count");
+	}
 
 	private String time2Str(String timeStr) {
 		timeStr = timeStr.trim();
 		return timeStr.substring(0, timeStr.lastIndexOf(":")).trim();
+	}
+	
+	private String time2yyyyMMdd(String timeStr){
+		timeStr=timeStr.trim();
+		return timeStr.substring(0,timeStr.lastIndexOf(" ")).trim();
 	}
 
 	/**

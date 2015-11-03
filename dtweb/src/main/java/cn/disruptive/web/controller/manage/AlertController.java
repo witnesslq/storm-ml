@@ -620,13 +620,51 @@ public class AlertController extends BaseController {
 	 * @param date
 	 * @return 
 	 */
-	public Integer businessTotal(Date date){
-		
+	public Integer businessTotalByMinute(Date date){
 		if(date==null){
 			throw new IllegalArgumentException("date :不能为空 ");
 		}
 		Integer all_Count=0;
 		String dateStr=DateUtils.formatDate(date, "yyyy-MM-dd HH:mm");
+		try{
+			List<Map<String,String>> list=HBaseHelper.scanByPrefixFilter("request_count", dateStr+"|"+"ebmp");
+			List<Map<String,String>> list2=HBaseHelper.scanByPrefixFilter("request_count", dateStr+"|"+"ebcp");
+			List<Map<String,String>> list3=HBaseHelper.scanByPrefixFilter("request_count", dateStr+"|"+"ebui");
+			if(list!=null&&list.size()>0){
+				for(Map<String,String> li:list){
+					all_Count=all_Count+Integer.parseInt(li.get("allCount").toString().trim());
+				}
+			}
+			if(list2!=null&&list2.size()>0){
+				for(Map<String,String> li:list2){
+					all_Count=all_Count+Integer.parseInt(li.get("allCount").toString().trim());
+				}
+			}
+			if(list3!=null && list3.size()>0){
+				for(Map<String,String> li:list3){
+					all_Count=all_Count+Integer.parseInt(li.get("allCount").toString().trim());
+				}
+			}
+		}catch(Exception e){
+			
+		}
+		return all_Count;
+	}
+
+	public static void main(String[] args){
+		System.out.println(new AlertController().businessTotalByDay(new Date()));
+	}
+	/**
+	 * 
+	 * @param date
+	 * @return
+	 */
+	public Integer businessTotalByDay(Date date){
+		if(date==null){
+			throw new IllegalArgumentException("date :不能为空 ");
+		}
+		Integer all_Count=0;
+		String dateStr=DateUtils.formatDate(date, "yyyy-MM-dd").trim();
 		try{
 			List<Map<String,String>> list=HBaseHelper.scanByPrefixFilter("request_count", dateStr+"|"+"ebmp");
 			List<Map<String,String>> list2=HBaseHelper.scanByPrefixFilter("request_count", dateStr+"|"+"ebcp");
