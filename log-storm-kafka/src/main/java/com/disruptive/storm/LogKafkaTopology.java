@@ -43,11 +43,11 @@ import backtype.storm.tuple.Values;
  */
 public class LogKafkaTopology {
 
-	public static class KafkaWordSplitter extends BaseRichBolt {
+	public static class LogSplitter extends BaseRichBolt {
 		private static final Logger LOG =LoggerFactory
-				.getLogger(KafkaWordSplitter.class);
+				.getLogger(LogSplitter.class);
+		
 		private static final long serialVersionUID = 886149197481637894L;
-		//private Integer count=0;
 		private OutputCollector collector;
 		public void prepare(Map stormConf, TopologyContext context,
 				OutputCollector collector) {
@@ -95,22 +95,8 @@ public class LogKafkaTopology {
 								line));
 					}
 				}
-//				if (words.length > 9
-//						&& words[8].trim().toLowerCase()
-//								.equals("interfacecall")
-//						&& (!words[7].trim().toLowerCase().equals("ebbc"))) {
-//					//LOG.info("line:{}"+line);
-//					
-//				} else {
-//					// 记录有问题的日志
-//				}
 			}
-			//send(input);
 		}
-		
-		/*private  synchronized void  send(Tuple input){
-			   this.collector.ack(input);
-		   }*/
 
 		/**
 		 * 保存ERROR日志
@@ -211,15 +197,15 @@ public class LogKafkaTopology {
 		TopologyBuilder builder = new TopologyBuilder();
 		builder.setSpout("kafka-reader", new KafkaSpout(spoutConf), 1); 
 		// 过滤标记为 InterfaceCall 日志
-		builder.setBolt("word-splitter", new KafkaWordSplitter(), 4)
+		builder.setBolt("log-splitter", new LogSplitter(), 4)
 				.shuffleGrouping("kafka-reader");
 
 		// 接口耗时统计分流
-		builder.setBolt("log-interfaceSplit", new LogInterfaceSplitBlot(), 4)
+		builder.setBolt("log-interfaceSplit", new ReqCountBlot(), 4)
 				.shuffleGrouping("word-splitter");
 
 		// 接口耗时统计
-		builder.setBolt("log-interfaceCount", new LogInterfaceCountBlot(), 4)
+		builder.setBolt("log-reqresmaping", new ReqResMapingBlot(), 4)
 				.fieldsGrouping("log-interfaceSplit", new Fields(Constant.DOMAIN_NAME,Constant.SERVICENAME));
 
 		Config conf = new Config();
@@ -239,8 +225,8 @@ public class LogKafkaTopology {
 			conf.setMaxTaskParallelism(3);
 			LocalCluster cluster = new LocalCluster();
 			cluster.submitTopology(name, conf, builder.createTopology());
-			// Thread.sleep(60000);
-			// cluster.shutdown();
+			Thread.sleep(60000);
+			cluster.shutdown();
 		}
 	}
 	

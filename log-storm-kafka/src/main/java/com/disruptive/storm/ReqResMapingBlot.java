@@ -38,9 +38,9 @@ import backtype.storm.tuple.Values;
  *         0000000000 则是异常日志。
  *
  */
-public class LogInterfaceCountBlot extends BaseRichBolt {
+public class ReqResMapingBlot extends BaseRichBolt {
 	public static final Logger LOGGER = LoggerFactory
-			.getLogger(LogInterfaceCountBlot.class);
+			.getLogger(ReqResMapingBlot.class);
 	private static final String RESPONSE_SUCCESS_CODE = "0000000000";
 	private static final String HBASE_TABLE_SYS_BUSINESS_NO_REQUEST_LOG = "sys_business_no_request_log";
 	private static final String HBASE_TABLE_LOG_TIME_TMP = "log_time_tmp";

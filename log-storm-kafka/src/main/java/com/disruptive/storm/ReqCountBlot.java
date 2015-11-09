@@ -3,11 +3,11 @@ package com.disruptive.storm;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -32,9 +32,9 @@ import backtype.storm.tuple.Values;
  * @author Administrator 根据不同的appName分流。
  *
  */
-public class LogInterfaceSplitBlot extends BaseRichBolt {
+public class ReqCountBlot extends BaseRichBolt {
 	private static final Logger LOG =LoggerFactory
-			.getLogger(LogInterfaceSplitBlot.class);
+			.getLogger(ReqCountBlot.class);
 	
 	
 	private static final String _TABLE_NAME="request_domain_count";
@@ -94,7 +94,13 @@ public class LogInterfaceSplitBlot extends BaseRichBolt {
 			while(lock.acquire(10, TimeUnit.MINUTES)){
 				for(Map.Entry<String, Integer> entry:tmpMap.entrySet()){
 				  Map<String,String> re=HBaseHelper.queryRow(_TABLE_NAME, entry.getKey());
-				  int count=Integer.parseInt(re.get("count").toString().trim());
+				  int count=0;
+				  if(re!=null&&re.size()>0){
+					  String count_str=re.get("count");
+					  if(StringUtils.isNotBlank(count_str)){
+						  count=Integer.parseInt(count_str.trim());
+					  }
+				  }
 				  count=count+Integer.parseInt(entry.getValue().toString().trim());
 				  Put put = new Put(entry.getKey().toString().getBytes());
 				  put.add("t1".getBytes(), "count".getBytes(),
@@ -122,9 +128,10 @@ public class LogInterfaceSplitBlot extends BaseRichBolt {
 			OutputCollector collector) {
 		this.collector = collector;
 		Timer timer = new Timer();
-		timer.schedule(new LogInterfaceSplitBlot.cacheTimer(), new Date(), 10000);
+		timer.schedule(new ReqCountBlot.cacheTimer(), new Date(), 10000);
 	}
 	
+	//刷新缓存到数据库中
 	class cacheTimer extends TimerTask{
 
 		@Override
