@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.disruptive.util.Constant;
 import com.disruptive.util.HBaseHelper;
 import com.disruptive.util.PropertiesUtil;
 
@@ -46,21 +47,7 @@ public class LogKafkaTopology {
 		private static final Logger LOG =LoggerFactory
 				.getLogger(KafkaWordSplitter.class);
 		private static final long serialVersionUID = 886149197481637894L;
-		
-		private static final String LOG_LEVEL="log_level";
-		private static final String TIME_STR="time_str";
-		private static final String DOMAIN_NAME="domain_name";
-		private static final String FUNCTION="function";
-		private static final String PID="pid";
-		private static final String PNAME="pname";
-		private static final String CLASSNAME="class_name";
-		private static final String APPNAME="app_name";
-		private static final String INTERFACECALL="interface_call";
-		private static final String REQRES="req_res";
-		private static final String SERVICENAME="service_name";
-		private static final String OTHRE="OTHRER"; 
-		
-		
+		//private Integer count=0;
 		private OutputCollector collector;
 		public void prepare(Map stormConf, TopologyContext context,
 				OutputCollector collector) {
@@ -82,23 +69,48 @@ public class LogKafkaTopology {
 				}
 				//根据|拆分 
 				String[] words = str.split("\\|", -1);
-				
-				if (words.length > 9
-						&& words[8].trim().toLowerCase()
-								.equals("interfacecall")
-						&& (!words[7].trim().toLowerCase().equals("ebbc"))) {
-					//LOG.info("line:{}"+line);
-					collector.emit(input, new Values(str));
-				} else {
-					// 记录有问题的日志
+				if(words.length>12){
+					//String log_level=words[0];
+					String time_str=words[1];
+					String domain_name=words[2].toLowerCase().trim();
+					//String function=words[3].toLowerCase().trim();
+					//String code_line=words[4];
+					//String pname=words[5];
+					//String class_name=words[6].toLowerCase().trim();
+					String app_name=words[7].toLowerCase().trim();
+					String interface_call=words[8].toLowerCase().trim();
+					String service_name=words[9].toLowerCase().trim();
+					String req_res=words[10].toLowerCase().trim();
+					String header=words[11];
+				//	String body=words[12];
+					if(interface_call.endsWith("interfacecall")
+							&&(!app_name.equals("ebbc"))){
+						collector.emit(new Values(
+								time_str,
+								domain_name,
+								app_name,
+								req_res,
+								service_name,
+								header,
+								line));
+					}
 				}
+//				if (words.length > 9
+//						&& words[8].trim().toLowerCase()
+//								.equals("interfacecall")
+//						&& (!words[7].trim().toLowerCase().equals("ebbc"))) {
+//					//LOG.info("line:{}"+line);
+//					
+//				} else {
+//					// 记录有问题的日志
+//				}
 			}
-			send(input);
+			//send(input);
 		}
 		
-		private  synchronized void  send(Tuple input){
+		/*private  synchronized void  send(Tuple input){
 			   this.collector.ack(input);
-		   }
+		   }*/
 
 		/**
 		 * 保存ERROR日志
@@ -115,7 +127,15 @@ public class LogKafkaTopology {
 		}
 
 		public void declareOutputFields(OutputFieldsDeclarer declarer) {
-			declarer.declare(new Fields("line"));
+			declarer.declare(new Fields(
+					Constant.TIME_STR,
+					Constant.DOMAIN_NAME,
+					Constant.APPNAME,
+					Constant.REQRES,
+					Constant.SERVICENAME,
+					Constant.HEADER,
+					Constant.LINESTR
+					));
 		}
 	}
 
@@ -166,7 +186,6 @@ public class LogKafkaTopology {
 
 	public static void main(String[] args) throws AlreadyAliveException,
 			InvalidTopologyException, InterruptedException {
-		
 		if(args.length!=5){
 			printDes();
 			return ;
@@ -201,7 +220,7 @@ public class LogKafkaTopology {
 
 		// 接口耗时统计
 		builder.setBolt("log-interfaceCount", new LogInterfaceCountBlot(), 4)
-				.fieldsGrouping("log-interfaceSplit", new Fields("word"));
+				.fieldsGrouping("log-interfaceSplit", new Fields(Constant.DOMAIN_NAME,Constant.SERVICENAME));
 
 		Config conf = new Config();
 		// conf.setDebug(true);

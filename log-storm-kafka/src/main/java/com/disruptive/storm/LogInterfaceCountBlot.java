@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.disruptive.dao.InterfaceTimeOutDao;
 import com.disruptive.dao.impl.InterfaceTimeOutDaoImpl;
 import com.disruptive.model.InterfaceTimeOut;
+import com.disruptive.util.Constant;
 import com.disruptive.util.HBaseHelper;
 
 import backtype.storm.task.OutputCollector;
@@ -48,26 +49,48 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 	private static final long serialVersionUID = 1L;
 
 	public void execute(Tuple input) {
-		String line = input.getValue(1).toString().trim();
-		if (!StringUtils.isNotBlank(line)) {
-			// collector.ack(input);
-			collector.emit(input, new Values(line, ""));
-			collector.ack(input);
-			return;
+		
+		String time_str=input.getString(0);
+		String domain_name=input.getString(1);
+		String app_name=input.getString(2);
+		String req_res=input.getString(3);
+		String service_name=input.getString(4);
+		String header=input.getString(5);
+		String line=input.getString(6);
+		
+		if(req_res.equals("request")){
+			try {
+				requestHeadler(header,domain_name,service_name,app_name,time_str,line);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}else if(req_res.equals("response")){
+			responseHeadler(header,domain_name,service_name,app_name,time_str,line);
 		}
+		this.collector.emit(new Values(time_str,domain_name,app_name,req_res,service_name,header,line));
+		
+		
+//      String line = input.getValue(1).toString().trim();
+//		if (!StringUtils.isNotBlank(line)) {
+//			// collector.ack(input);
+//			collector.emit(input, new Values(line, ""));
+//			collector.ack(input);
+//			return;
+//		}
 		// 处理前面|
-		if (line.startsWith("|")) {
-			line = line.substring(1).trim();
-		}
+//		if (line.startsWith("|")) {
+//			line = line.substring(1).trim();
+//		}
 		// LOGGER.info("===="+line);
-		String[] words = line.split("\\|", -1);
+	/*	String[] words = line.split("\\|", -1);
 		if (words.length < 12) {
 			collector.emit(input, new Values(line, words));
 			collector.ack(input);
 			return;
-		}
+		}*/
 
-		if (words[10].trim().toLowerCase().equals("request")) {
+	/*	if (words[10].trim().toLowerCase().equals("request")) {
 			try {
 				requestHeadler(line, words);
 				// collector.ack(input);
@@ -78,13 +101,20 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 		} else {
 			responseHeadler(line, words);
 			// collector.ack(input);
-		}
-		collector.emit(input, new Values(line, words));
-		collector.ack(input);
+		}*/
+		/*collector.emit(input, new Values(line, words));
+		collector.ack(input);*/
 	}
 
-	private void responseHeadler(String line, String[] words) {
-		String json1 = words[11];
+	private void responseHeadler(
+			String header,
+			String domain_name,
+			String service_name,
+			String app_name,
+			String time_str,
+			String line) {
+		String json1 = header;
+		
 		String[] array = json1.replaceAll("\\{message_head:", "")
 				.replaceAll("\\{", "").replaceAll("\\}", "").split(",");
 		Map<String, String> tmpMap = new HashMap<String, String>();
@@ -98,19 +128,20 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 						"");
 			}
 		}
-		String key = words[2].trim().toLowerCase() + "|"
-				+ words[9].trim().toLowerCase() + "|" + tmpMap.get("reqseqno");
+		String key = domain_name.toLowerCase() + "|"
+				+ service_name.toLowerCase() + "|" + tmpMap.get("reqseqno");
 		// 存储响应次数
-		resCount(words[1], words[2].trim().toLowerCase() + "|"
-				+ words[9].trim().toLowerCase(), tmpMap);
+		/*resCount(words[1], words[2].trim().toLowerCase() + "|"
+				+ words[9].trim().toLowerCase(), tmpMap);*/
+		
 		long endTime = 0;
 		try {
-			endTime = time2Long(words[1]);
+			endTime = time2Long(time_str);
 		} catch (ParseException e2) {
 			LOGGER.error(e2.getCause().getClass() + "|"
 					+ e2.getCause().getMessage() + "|" + e2.getMessage());
 		}
-		String rowKey1 = words[1] + "|response|" + key;// +"|"+tmpMap.get("reqseqno");
+		String rowKey1 = time_str + "|response|" + key;// +"|"+tmpMap.get("reqseqno");
 		Map<String, String> teMap = queryHbase(rowKey1);
 		if (teMap != null && teMap.size() > 0) {
 			return;
@@ -120,8 +151,8 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 				HBASE_TABLE_LOG_TIME_TMP, key);
 		if (hMap != null && hMap.size() > 0) {
 			InterfaceTimeOut interfaceTimeOut = new InterfaceTimeOut();
-			interfaceTimeOut.setAppName(words[7]);
-			interfaceTimeOut.setServerName(words[2]);
+			interfaceTimeOut.setAppName(app_name);
+			interfaceTimeOut.setServerName(domain_name);
 			interfaceTimeOut.setSeneCode(hMap.get("behavcode") == null ? ""
 					: hMap.get("behavcode").toUpperCase()); // 场景码
 			interfaceTimeOut
@@ -133,13 +164,13 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 			interfaceTimeOut
 					.setBizTrackNo(hMap.get("bizTrackNo".toLowerCase()) == null ? ""
 							: hMap.get("bizTrackNo".toLowerCase()));
-			interfaceTimeOut.setInterfaceName(words[9]);
+			interfaceTimeOut.setInterfaceName(service_name);
 			interfaceTimeOut.setRowKey("");
 			interfaceTimeOut.setReqRowKey(hMap.get("reqrowkey"));
 			interfaceTimeOut.setResRowKey(rowKey1);
 			interfaceTimeOut.setRecordTime(new Date());
 			String value = hMap.get("runtime");
-			interfaceTimeOut.setRecordTimeStr(words[1] + "-" + value);
+			interfaceTimeOut.setRecordTimeStr(time_str + "-" + value);
 			interfaceTimeOut.setRespCode(tmpMap.get("respcode") == null ? ""
 					: tmpMap.get("respcode"));
 			interfaceTimeOut.setIsException((!RESPONSE_SUCCESS_CODE
@@ -170,18 +201,23 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 			// 如果不全为0则提示异常错误信息
 			if (!RESPONSE_SUCCESS_CODE.equals(interfaceTimeOut.getRespCode()
 					.trim())) {
-				saveErrorLog(System.currentTimeMillis() + "", line);
+				saveErrorLog(System.currentTimeMillis() + "", header);
 			}
 		} else {
 			// 找不到请求
-			saveNoRequest("response|" + key + "|" + words[1], line);
+			saveNoRequest("response|" + key + "|" + time_str, "");
 		}
 	}
 
-	private void requestHeadler(String line, String[] words) throws IOException {
+	private void requestHeadler(
+			String header,
+			String domain_name,
+			String service_name,
+			String app_name,
+			String time_str,String line) throws IOException {
 		Map<String, String> map = new HashMap<String, String>();
 		// 是请求日志
-		String json = words[11];
+		String json = header;
 		if (json.startsWith("\\{message_head:")) {
 			String[] array = json.replaceAll("\\{message_head:", "")
 					.replaceAll("\\{", "").replaceAll("\\}", "").split(",");
@@ -209,16 +245,18 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 				}
 			}
 		}
-		String key = words[2].trim().toLowerCase() + "|"
-				+ words[9].trim().toLowerCase() + "|"
-				+ map.get("reqSeqNo".toLowerCase());
-		reqCount(words[1], words[2].trim().toLowerCase() + "|"
-				+ words[9].trim().toLowerCase());
-		reqCountByDay(words[1], words[2].trim().toLowerCase() + "|"
-				+ words[9].trim().toLowerCase());
 		
-		map.put("runtime", words[1]);
-		String rowKey = words[1] + "|request|" + key;// +"|"+map.get("reqSeqNo".toLowerCase());
+		String key = domain_name.toLowerCase() + "|"
+				+ service_name.toLowerCase() + "|"
+				+ map.get("reqSeqNo".toLowerCase());
+		reqCount(time_str, domain_name.toLowerCase() + "|"
+				+ service_name.toLowerCase());
+		
+		reqCountByDay(time_str, domain_name.toLowerCase() + "|"
+				+ service_name.toLowerCase());
+		
+		map.put("runtime", time_str);
+		String rowKey = time_str + "|request|" + key;// +"|"+map.get("reqSeqNo".toLowerCase());
 		saveHbase(rowKey, line);
 		map.put("reqrowkey", rowKey);
 		map.put("rowKey", key);
@@ -238,19 +276,41 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 								map.get("rowKey").toString());
 					}
 					if (map.get("line") != null) {
-						responseHeadler(reqRowKey, m.get("line").toString()
-								.split("\\|", -1));
+						/*responseHeadler(reqRowKey, m.get("line").toString()
+								.split("\\|", -1));*/
+						res(map.get("line").toString());
 					}
 				}
 			}
 		}
+	}
+	
+	
+	public void res(String line){
+		String[] words=line.split("\\|", -1);
+		//String log_level=words[0];
+		String time_str=words[1];
+		String domain_name=words[2].toLowerCase().trim();
+		//String function=words[3].toLowerCase().trim();
+		//String code_line=words[4];
+		//String pname=words[5];
+		//String class_name=words[6].toLowerCase().trim();
+		String app_name=words[7].toLowerCase().trim();
+		//String interface_call=words[8].toLowerCase().trim();
+		String service_name=words[9].toLowerCase().trim();
+		//String req_res=words[10].toLowerCase().trim();
+		String header=words[11];
+		//String body=words[12];
+		
+		responseHeadler(header,domain_name,service_name,app_name,time_str,line);
+		
 	}
 	/**
 	 * 保存response 计数
 	 * 
 	 * @param rowKey
 	 */
-	private void resCount(String timeStr, String rowKey,
+	/*private void resCount(String timeStr, String rowKey,
 			Map<String, String> tmpMap) {
 		Integer allCount = 0;
 		Integer errorCount = 0;
@@ -288,7 +348,7 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 				Bytes.toBytes(nullCount + ""));
 		HBaseHelper.save(put, "response_count");
 		// "2015-10-08 00:13:"
-	}
+	}*/
 
 	/**
 	 * 保存request 计数 按分钟记录
@@ -421,7 +481,15 @@ public class LogInterfaceCountBlot extends BaseRichBolt {
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("response", "count"));
+		declarer.declare(new Fields(
+				Constant.TIME_STR,
+				Constant.DOMAIN_NAME,
+				Constant.APPNAME,
+				Constant.REQRES,
+				Constant.SERVICENAME,
+				Constant.HEADER,
+				Constant.LINESTR
+				));
 	}
 
 }
