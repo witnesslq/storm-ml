@@ -1,1 +1,0 @@
-storm {your.jar} com.disruptive.storm.LogKafkaTopology {numWorker} {zks01} {zks02} {zks03} {topic}
