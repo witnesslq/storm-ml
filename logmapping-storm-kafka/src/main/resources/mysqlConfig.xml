@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<create id="createTable" tableName="t_interface_timeout">
+CREATE TABLE `t_interface_timeout_yyyyMMdd` (
+		`appName`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		`id`  int(11) NOT NULL AUTO_INCREMENT ,"
+		`serverName`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		`sceneCode`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		`interfaceName`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		`timeout`  int(11) NOT NULL ,
+		`trackNo`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		`rowKey`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		`reqRowKey`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		`resRowKey`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		`recordTime`  datetime NOT NULL ,
+		`recordTimeStr`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		`respCode`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		`isException`  bit(1) NOT NULL DEFAULT b'0' ,
+		`sceneNameEns`  varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ,
+		`orgnlSeqNo`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		`bizTrackNo`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		PRIMARY KEY (`id`),
+		FULLTEXT INDEX `index` (`appName`, `serverName`, `sceneCode`, `interfaceName`, `trackNo`, `sceneNameEns`, `orgnlSeqNo`, `bizTrackNo`) 
+		)
+		ENGINE=MyISAM
+		DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci
+		AUTO_INCREMENT=3016
+		CHECKSUM=0
+		ROW_FORMAT=DYNAMIC
+		DELAY_KEY_WRITE=0
+</create>
+
+
