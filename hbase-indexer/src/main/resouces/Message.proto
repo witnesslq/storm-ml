@@ -1,0 +1,22 @@
+message IndexReqMsg{
+	required string 	row = 1;
+	required string		context = 2;
+	required string 	ip = 3;
+	required string 	wtime = 4;
+	required string		mtable = 5;
+}
+
+message IndexRepMsg{
+	required string		row = 1;
+	required int32		status = 2;		
+}
+
+message QueryReqMsg{
+	required string		query = 1;
+
+}
+
+message QueryRepMsg{
+	required string		row = 1;
+	required int32		status=2;
+}
