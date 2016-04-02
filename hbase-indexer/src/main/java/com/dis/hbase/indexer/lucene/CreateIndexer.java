@@ -3,7 +3,9 @@ package com.dis.hbase.indexer.lucene;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
@@ -14,6 +16,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Field.Index;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
@@ -21,6 +25,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
 import com.dis.hbase.indexer.Config;
+import com.dis.hbase.indexer.model.IndexCloumn;
 import com.dis.hbase.indexer.util.FileUtil;
 
 public class CreateIndexer {
@@ -316,6 +321,39 @@ public class CreateIndexer {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	
+	/**
+	 * 解析生成Doc 
+	 * @param json
+	 * @return
+	 */
+	private static Document json2Doc(String json){
+		List<IndexCloumn> indexCloumn=new ArrayList<IndexCloumn>();
+		Map<String,String> msg=new HashMap<String,String>();
+		Document doc=new Document();
+		for(int i=0;i<indexCloumn.size();i++){
+			IndexCloumn indexClo=indexCloumn.get(i);
+			Index indexType=null;
+			switch(indexClo.getIndexCloumnIndex()){
+			case 1:
+				indexType=Index.NOT_ANALYZED;
+				break;
+			case 2:
+				indexType=Index.NO;
+				break;
+			case 3:
+				indexType=Index.ANALYZED;
+				break;
+			}
+			doc.add(new Field(
+					indexClo.getIndexCloumnName(),
+					msg.get(indexClo.getIndexCloumnName()), (indexClo.getIndexCloumnStore()==1?Field.Store.YES:Field.Store.NO),
+							indexType));
+		}
+		
+		return doc;
 	}
 
 }

@@ -9,8 +9,10 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
@@ -20,13 +22,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Field.Index;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.server.handler.ContextHandler;
 
 import com.dis.hbase.indexer.Config;
 import com.dis.hbase.indexer.client.Client;
 import com.dis.hbase.indexer.lucene.CreateIndexer;
 import com.dis.hbase.indexer.lucene.Searcher;
+import com.dis.hbase.indexer.model.IndexCloumn;
 import com.dis.hbase.indexer.pb.Message;
 import com.dis.hbase.indexer.util.ThreadPool;
 
@@ -35,7 +47,7 @@ public class Main {
 	private static Thread threadCreateIndexListener = null;// 监听线程
 	private static Thread threadQueryListener = null;// 监听查询
 	private static Thread[] threadCreateIndex = new Thread[Config.THREAD_CREATE_INDEX_SIZE];// 创建索引的线程
-	//private static Thread[] threadQueryDoc = null;// 查询文件的线程
+	// private static Thread[] threadQueryDoc = null;// 查询文件的线程
 	private static Config config;
 	private static ExecutorService myThreadPool = new ThreadPool(config).getExecutorService();
 
@@ -141,10 +153,30 @@ public class Main {
 		threadCreateIndexListener.start();
 		threadQueryListener.start();
 		System.out.println("start....");
-		
+
 		Client.readTxtFile();
-		
+
 		// stopThread();
+	}
+
+	public static void runHttpServer() {
+		try {
+			// 进行服务器配置
+			Server server = new Server(8080);
+			ContextHandler context = new ContextHandler();
+			// 設置收索的URL地址
+			context.setContextPath("/search");
+			context.setResourceBase(".");
+			context.setClassLoader(Thread.currentThread().getContextClassLoader());
+			server.setHandler(context);
+			context.setHandler(new SearchHandler());
+			// 啟動服務器
+			server.start();
+			server.join();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private static Document msg2Doc(Message.IndexReqMsg msg) {
@@ -160,8 +192,11 @@ public class Main {
 		doc.add(new Field("wtime", wtime, Field.Store.YES, Field.Index.NOT_ANALYZED));
 		doc.add(new Field("mtable", mtable, Field.Store.YES, Field.Index.NOT_ANALYZED));
 		return doc;
-
 	}
+	
+
+	
+	
 
 	/**
 	 * 启动查询TCP监听端口
@@ -261,9 +296,7 @@ public class Main {
 				public String call() throws Exception {
 					return Searcher.search(query, 100);
 				}
-			})
-
-			);
+			}));
 			msg.setStatus(1);
 			sendData(socketChannel, msg.build());
 		} catch (Exception e) {
@@ -354,4 +387,57 @@ public class Main {
 		return re;
 	}
 
+}
+/**
+ * 查下Index
+ * @author apple
+ *
+ */
+class SearchHandler extends AbstractHandler {
+
+	@Override
+	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
+			throws IOException, ServletException {
+		String query = request.getParameter("query");
+		String result = "ok";
+		if (null != query && query.equals("search")) {
+			result = query + ", " + result;
+		}
+		print(baseRequest, response, result);
+	}
+
+	private void print(Request baseRequest, HttpServletResponse response, String result) throws IOException {
+		response.setContentType("text/json;charset=utf-8");
+		response.setStatus(HttpServletResponse.SC_OK);
+		baseRequest.setHandled(true);
+		response.getWriter().println(result);
+	}
+
+}
+
+/**
+ * 創建CreateIndex
+ * @author apple
+ *
+ */
+class CreateIndexHandler extends AbstractHandler{
+
+	@Override
+	public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
+			throws IOException, ServletException {
+		String rowKey=request.getParameter("");
+		String result="Ok";
+		if(null!=rowKey && rowKey.equals("")){
+			result=rowKey+","+result;
+		}
+		print(baseRequest,response,result);
+	}
+	
+	private void print(Request baseRequest,HttpServletResponse response,String result) throws IOException{
+		response.setContentType("text/json;charset=utf-8");
+		response.setStatus(HttpServletResponse.SC_OK);
+		baseRequest.setHandled(true);
+		response.getWriter().println(result);
+	}
+	
 }

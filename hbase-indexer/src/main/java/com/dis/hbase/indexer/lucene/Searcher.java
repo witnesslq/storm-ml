@@ -96,8 +96,6 @@ public class Searcher {
 			ScoreDoc[] hits = topDocs.scoreDocs;
 			int begin=pageSize*(index-1);
 			int end = Math.min(begin+pageSize,hits.length );
-			
-			
 			//System.out.println("总共匹配多少个：" + topDocs.totalHits);
 			
 			// 应该与topDocs.totalHits相同
@@ -146,4 +144,6 @@ public class Searcher {
 
 	}
 
+	
+	
 }
